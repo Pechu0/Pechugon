@@ -109,30 +109,18 @@ function lcdFade(context, target, callback) {
 function run(file) {
     initAudioContext();  // Reanuda el AudioContext cuando el usuario selecciona el ROM
     
-    var dead = document.getElementById('loader');
-    dead.value = '';
-    var load = document.getElementById('select');
-    load.textContent = 'Loading...';
-    load.removeAttribute('onclick');
-    var pause = document.getElementById('pause');
-    pause.textContent = "PAUSE";
+    // Verificar si el archivo es un Blob
+    if (!(file instanceof Blob)) {
+        console.error("El archivo pasado no es un Blob o File");
+        return;
+    }
+    
     gba.loadRomFromFile(file, function(result) {
         if (result) {
-            for (var i = 0; i < runCommands.length; ++i) {
-                runCommands[i]();
-            }
-            runCommands = [];
-            fadeOut('preload', 'ingame');
-            fadeOut('instructions', null, true);
+            gba.rom = file;  // Guardar el archivo ROM en memoria
             gba.runStable();
         } else {
-            load.textContent = 'FAILED';
-            setTimeout(function() {
-                load.textContent = 'SELECT';
-                load.onclick = function() {
-                    document.getElementById('loader').click();
-                }
-            }, 3000);
+            console.error("Error al cargar el ROM");
         }
     });
 }

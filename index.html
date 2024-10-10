@@ -124,6 +124,9 @@ function run(file) {
             console.error("Error al cargar el ROM");
         }
     });
+    gba.rom = file;  // Guardar el archivo ROM en memoria para futuros resets
+console.log("ROM guardado en gba.rom:", gba.rom);
+
 }
 
 
@@ -215,8 +218,10 @@ function loadSelectedRom() {
     
     // Verificar si ya hay un ROM cargado
     if (gba.rom && gba.rom instanceof Blob) {
+        console.log("ROM encontrado y válido, intentando recargar...");
         gba.loadRomFromFile(gba.rom, function(result) {
             if (result) {
+                console.log("ROM recargado correctamente, ejecutando...");
                 gba.runStable();  // Reiniciar la ejecución del emulador
             } else {
                 console.error("Error al recargar el ROM");
@@ -226,6 +231,7 @@ function loadSelectedRom() {
         console.error("No hay un ROM válido para recargar");
     }
 }
+
 
 
     function fadeOut(id, nextId, kill) {

@@ -22,7 +22,7 @@
     <script src="js/gpio.js"></script>
     <script src="js/gba.js"></script>
     <script src="resources/xhr.js"></script>
-    <link rel="shortcut icon" href="favicon.ico"> <!-- Actualiza si es necesario -->
+    <link rel="shortcut icon" href="favicon.ico">
     
     <script>
     var gba;
@@ -50,14 +50,21 @@
 
         gba.loadRomFromFile(file, function(result) {
             if (result) {
-                gba.rom = file;  // Guardar el archivo ROM en memoria para futuros resets
+                gba.rom = file;
                 gba.runStable();
+                showControls();  // Mostrar controles cuando se carga el ROM
             } else {
                 console.error("Error al cargar el ROM");
             }
         });
-        gba.rom = file;  // Guardar el archivo ROM en memoria para futuros resets
+        gba.rom = file;
         console.log("ROM guardado en gba.rom:", gba.rom);
+    }
+
+    // Función para mostrar los controles
+    function showControls() {
+        document.getElementById('preload').classList.add('hidden');
+        document.getElementById('ingame').classList.remove('hidden');
     }
 
     // Función para cargar el ROM desde URL
@@ -154,7 +161,6 @@
                 gba.setBios(bios);
             });
 
-            // Mueve la configuración del audio a una interacción basada en el usuario
             if (!gba.audio.context) {
                 var soundbox = document.getElementById('sound');
                 if (soundbox) {

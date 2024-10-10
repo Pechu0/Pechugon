@@ -207,24 +207,19 @@ function reset() {
     gba.pause();       // Pausar el emulador actual
     gba.reset();       // Reiniciar el emulador (esto resetea todo, incluyendo los registros de la GBA)
     
-    // Limpiar el canvas
-    var canvas = document.getElementById('screen');
-    var context = canvas.getContext('2d');
-    context.clearRect(0, 0, canvas.width, canvas.height);
+    // Volver a cargar el ROM
+    var load = document.getElementById('select');
     
-    // Verificar si ya hay un ROM cargado
-    if (gba.rom && gba.rom instanceof Blob) {
-        gba.loadRomFromFile(gba.rom, function(result) {
-            if (result) {
-                gba.runStable();  // Reiniciar la ejecución del emulador
-            } else {
-                console.error("Error al recargar el ROM");
-            }
-        });
-    } else {
-        console.error("No hay un ROM válido para recargar");
+    // Verificar si el elemento con ID 'select' existe antes de modificar sus propiedades
+    if (load) {
+        load.textContent = 'SELECT';
     }
-}
+    
+    // Eliminar el mensaje de crash si existía
+    var crash = document.getElementById('crash');
+    if (crash) {
+        crash.parentElement.removeChild(crash);
+    }
     
     // Limpiar el canvas
     var canvas = document.getElementById('screen');
@@ -247,7 +242,8 @@ function reset() {
     // Restaurar la pantalla de juego
     fadeOut('ingame', 'preload');
 }
-function fadeOut(id, nextId, kill) {
+
+    function fadeOut(id, nextId, kill) {
     var e = document.getElementById(id);  // Corrección aquí: getElementById
     var e2 = document.getElementById(nextId);  // Corrección aquí también
     if (!e) {

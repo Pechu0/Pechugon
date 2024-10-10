@@ -132,7 +132,7 @@ function loadRomFromUrl(url) {
 function loadSelectedRom() {
     var select = document.getElementById('romSelect');
     var selectedRom = select.value;
-    var romUrl = 'https://raw.githubusercontent.com/Pechu0/Pechu/main/ROMs/' + selectedRom;
+    var romUrl = 'https://raw.githubusercontent.com/Pechu0/Pechugon/main/ROMs/' + selectedRom;
     console.log("Cargando ROM desde: " + romUrl);
     loadRomFromUrl(romUrl);  // Cargar el ROM desde la URL seleccionada
 }
@@ -222,9 +222,9 @@ function setVolume(volume) {
     <div id="preload">
         <!-- Menú desplegable para seleccionar el ROM -->
         <select id="romSelect">
-            <option value="Mega%20Man%20Battle%20Network%20(USA).gba">Mega Man Battle Network (USA)</option>
+            <option value="Mega%20Man%20Battle%20Network%20(USA).gba">Mega Man Battle Network US</option>
             <option value="Pokemon%20FireRed.gba">Pokemon FireRed</option>
-            <option value="Hercules%20(USA,%20Europe)%20(SGB%20Enhanced).gb">Hercules (USA, Europe) (SGB Enhanced)</option>
+            <option value="Hercules%20(USA,%20Europe)%20(SGB%20Enhanced).gb">Hercules</option>
             <!-- Agrega más opciones aquí -->
         </select>
         <button class="bigbutton" id="loadRomButton" onclick="loadSelectedRom()">LOAD ROM</button>

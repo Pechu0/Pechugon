@@ -240,7 +240,7 @@ function reset() {
     
     // Si ya hay un ROM cargado, volverlo a cargar después del reset
     if (gba.rom) {
-        gba.loadRom(gba.rom);   // Recargar el ROM que estaba en memoria
+        gba.loadRomFromFile(gba.rom);   // Recargar el ROM que estaba en memoria con loadRomFromFile
         gba.runStable();        // Reiniciar la ejecución del emulador
     }
     
@@ -254,7 +254,6 @@ function reset() {
     // Restaurar la pantalla de juego
     fadeOut('ingame', 'preload');
 }
-
 function fadeOut(id, nextId, kill) {
     var e = document.getElementById(id);  // Corrección aquí: getElementById
     var e2 = document.getElementById(nextId);  // Corrección aquí también

@@ -95,26 +95,18 @@
         loadRomFromUrl(romUrl);
     }
 
-    // Variable global para almacenar una copia del ROM
-let savedRom = null;
-
 function reset() {
     if (!gba) return;
-    
-    // Pausar y reiniciar el emulador
+
     gba.pause();
     gba.reset();
 
-    // Limpiar el canvas
     var canvas = document.getElementById('screen');
     var context = canvas.getContext('2d');
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Comprobar si hay un ROM válido
+    // Aquí compruebas si gba.rom es válido antes de intentar recargar
     if (gba.rom && gba.rom instanceof Blob) {
-        // Guardar una copia del ROM antes de reiniciar
-        savedRom = gba.rom.slice(); // Usar slice() para crear una copia
-
         console.log("ROM encontrado y válido, intentando recargar...");
         gba.loadRomFromFile(gba.rom, function(result) {
             if (result) {
@@ -125,9 +117,11 @@ function reset() {
             }
         });
     } else {
+        // Manejo alternativo si no hay un ROM válido
         console.error("No hay un ROM válido para recargar");
     }
 }
+
 
     // Función para ajustar el volumen
     function setVolume(volume) {

@@ -95,31 +95,39 @@
         loadRomFromUrl(romUrl);
     }
 
-    // Función para reiniciar el emulador
-    function reset() {
-        if (!gba) return;
+    // Variable global para almacenar una copia del ROM
+let savedRom = null;
 
-        gba.pause();
-        gba.reset();
+function reset() {
+    if (!gba) return;
+    
+    // Pausar y reiniciar el emulador
+    gba.pause();
+    gba.reset();
 
-        var canvas = document.getElementById('screen');
-        var context = canvas.getContext('2d');
-        context.clearRect(0, 0, canvas.width, canvas.height);
+    // Limpiar el canvas
+    var canvas = document.getElementById('screen');
+    var context = canvas.getContext('2d');
+    context.clearRect(0, 0, canvas.width, canvas.height);
 
-        if (gba.rom && gba.rom instanceof Blob) {
-            console.log("ROM encontrado y válido, intentando recargar...");
-            gba.loadRomFromFile(gba.rom, function(result) {
-                if (result) {
-                    console.log("ROM recargado correctamente, ejecutando...");
-                    gba.runStable();
-                } else {
-                    console.error("Error al recargar el ROM");
-                }
-            });
-        } else {
-            console.error("No hay un ROM válido para recargar");
-        }
+    // Comprobar si hay un ROM válido
+    if (gba.rom && gba.rom instanceof Blob) {
+        // Guardar una copia del ROM antes de reiniciar
+        savedRom = gba.rom.slice(); // Usar slice() para crear una copia
+
+        console.log("ROM encontrado y válido, intentando recargar...");
+        gba.loadRomFromFile(gba.rom, function(result) {
+            if (result) {
+                console.log("ROM recargado correctamente, ejecutando...");
+                gba.runStable();
+            } else {
+                console.error("Error al recargar el ROM");
+            }
+        });
+    } else {
+        console.error("No hay un ROM válido para recargar");
     }
+}
 
     // Función para ajustar el volumen
     function setVolume(volume) {

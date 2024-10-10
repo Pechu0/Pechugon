@@ -112,6 +112,8 @@ function reset() {
             if (result) {
                 console.log("ROM recargado correctamente, ejecutando...");
                 gba.runStable();
+                gba.rom = file;
+                console.log("ROM guardado en gba.rom:", gba.rom);
             } else {
                 console.error("Error al recargar el ROM");
             }

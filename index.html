@@ -36,7 +36,7 @@ try {
         gba.pause();
         var screen = document.getElementById('screen');
         if (screen.getAttribute('class') == 'dead') {
-            console.log('We appear to have crashed multiple times without resetting.');
+            console.log('We appear to have crashed multiple times without reseting.');
             return;
         }
         var crash = document.createElement('img');
@@ -48,7 +48,14 @@ try {
 } catch (exception) {
     gba = null;
 }
-
+    
+// Función que se llamará tras la interacción del usuario
+function initAudioContext() {
+    if (gba.audio.context && gba.audio.context.state === 'suspended') {
+        gba.audio.context.resume(); // Reanuda el AudioContext después de un gesto del usuario
+    }
+}
+    
 window.onload = function() {
     if (gba) {
         var canvas = document.getElementById('screen');
@@ -93,7 +100,67 @@ function lcdFade(context, target, callback) {
     }, 50);
 }
 
+// Función que será llamada tras la carga del ROM
+function run(file) {
+    initAudioContext();  // Reanuda el AudioContext cuando el usuario selecciona el ROM
+    
+    var dead = document.getElementById('loader');
+    dead.value = '';
+    var load = document.getElementById('select');
+    load.textContent = 'Loading...';
+    load.removeAttribute('onclick');
+    var pause = document.getElementById('pause');
+    pause.textContent = "PAUSE";
+    gba.loadRomFromFile(file, function(result) {
+        if (result) {
+            for (var i = 0; i < runCommands.length; ++i) {
+                runCommands[i]();
+            }
+            runCommands = [];
+            fadeOut('preload', 'ingame');
+            fadeOut('instructions', null, true);
+            gba.runStable();
+        } else {
+            load.textContent = 'FAILED';
+            setTimeout(function() {
+                load.textContent = 'SELECT';
+                load.onclick = function() {
+                    document.getElementById('loader').click();
+                }
+            }, 3000);
+        }
+    });
+}
 
+    window.onload = function() {
+    if (gba && FileReader) {
+        var canvas = document.getElementById('screen');
+        gba.setCanvas(canvas);
+
+        gba.logLevel = gba.LOG_ERROR;
+
+        loadRom('resources/bios.bin', function(bios) {
+            gba.setBios(bios);
+        });
+
+        // Mueve la configuración del audio a una interacción basada en el usuario
+        if (!gba.audio.context) {
+            // Deja el cuadro de sonido si el sonido no está disponible
+            var soundbox = document.getElementById('sound');
+            soundbox.parentElement.removeChild(soundbox);
+        }
+
+        if (window.navigator.appName == 'Microsoft Internet Explorer') {
+            // Elimina la opción pixelada si no funciona
+            var pixelatedBox = document.getElementById('pixelated');
+            pixelatedBox.parentElement.removeChild(pixelatedBox);
+        }
+    } else {
+        var dead = document.getElementById('controls');
+        dead.parentElement.removeChild(dead);
+    }
+}
+    
 function run(romData) {
     var pause = document.getElementById('pause');
     pause.textContent = "PAUSE";

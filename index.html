@@ -48,16 +48,20 @@ try {
 } catch (exception) {
     gba = null;
 }
-    
+
 // Función que se llamará tras la interacción del usuario
 function initAudioContext() {
-    if (gba.audio.context && gba.audio.context.state === 'suspended') {
-        gba.audio.context.resume(); // Reanuda el AudioContext después de un gesto del usuario
+    if (gba && gba.audio.context && gba.audio.context.state === 'suspended') {
+        gba.audio.context.resume().then(() => {
+            console.log('AudioContext reanudado');
+        }).catch(err => {
+            console.error('Error al reanudar AudioContext:', err);
+        });
     }
 }
-    
+
 window.onload = function() {
-    if (gba) {
+    if (gba && FileReader) {
         var canvas = document.getElementById('screen');
         gba.setCanvas(canvas);
 
@@ -71,11 +75,13 @@ window.onload = function() {
             var soundbox = document.getElementById('sound');
             soundbox.parentElement.removeChild(soundbox);
         }
+
     } else {
         var dead = document.getElementById('controls');
         dead.parentElement.removeChild(dead);
     }
 }
+
 function lcdFade(context, target, callback) {
     var i = 0;
     var drawInterval = setInterval(function() {
@@ -99,7 +105,6 @@ function lcdFade(context, target, callback) {
         }
     }, 50);
 }
-
 // Función que será llamada tras la carga del ROM
 function run(file) {
     initAudioContext();  // Reanuda el AudioContext cuando el usuario selecciona el ROM
@@ -180,6 +185,7 @@ function run(romData) {
 }
 
 // Nueva función para cargar el ROM desde una URL con fetch y ArrayBuffer
+// Nueva función para cargar el ROM desde una URL con fetch y ArrayBuffer
 function loadRomFromUrl(url) {
     fetch(url)
         .then(response => {
@@ -203,9 +209,9 @@ function loadSelectedRom() {
     var selectedRom = select.value;
     var romUrl = 'https://raw.githubusercontent.com/Pechu0/Pechugon/main/ROMs/' + selectedRom;
     console.log("Cargando ROM desde: " + romUrl);
+    
+    initAudioContext();  // Llama initAudioContext cuando se selecciona el ROM
     loadRomFromUrl(romUrl);  // Cargar el ROM desde la URL seleccionada
-}
-
 function reset() {
     if (!gba) return;  // Verificar que gba está inicializado
     

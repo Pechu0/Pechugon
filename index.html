@@ -87,6 +87,7 @@
             if (!gba) return;
             gba.pause();
             gba.reset();
+            gba.loadSelectedRom();}        
             if (!gba) {
             console.error("No se ha inicializado correctamente el objeto gba.");
             alert("No se ha inicializado correctamente el emulador.");

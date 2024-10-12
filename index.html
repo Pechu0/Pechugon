@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GBA.js</title>
     <link rel="stylesheet" href="resources/main.css">
+    <link rel="shortcut icon" href="favicon.ico">
+    
     <script src="js/util.js"></script>
     <script src="js/core.js"></script>
     <script src="js/arm.js"></script>
@@ -22,169 +24,133 @@
     <script src="js/gpio.js"></script>
     <script src="js/gba.js"></script>
     <script src="resources/xhr.js"></script>
-    <link rel="shortcut icon" href="favicon.ico">
-    
+
     <script>
-    var gba;
-    var runCommands = [];
-    var debug = null;
+        let gba, runCommands = [], debug = null;
 
-    function initAudioContext() {
-        if (gba && gba.audio.context && gba.audio.context.state === 'suspended') {
-            gba.audio.context.resume().then(() => {
+        function initAudioContext() {
+            if (gba?.audio?.context?.state === 'suspended') {
+                gba.audio.context.resume().catch(err => console.error('Error al reanudar AudioContext:', err));
                 console.log('AudioContext reanudado');
-            }).catch(err => {
-                console.error('Error al reanudar AudioContext:', err);
+            }
+        }
+
+        function run(file) {
+            initAudioContext();
+
+            if (!(file instanceof Blob)) {
+                console.error("El archivo no es un Blob o File");
+                return;
+            }
+
+            gba.loadRomFromFile(file, result => {
+                if (result) {
+                    gba.rom = file;
+                    gba.runStable();
+                    showControls();
+                } else {
+                    console.error("Error al cargar el ROM");
+                }
             });
         }
-    }
 
-    // Función para manejar la carga del ROM desde archivo
-    function run(file) {
-        initAudioContext();
-
-        if (!(file instanceof Blob)) {
-            console.error("El archivo pasado no es un Blob o File");
-            return;
+        function showControls() {
+            document.getElementById('preload').classList.add('hidden');
+            document.getElementById('ingame').classList.remove('hidden');
         }
 
-        gba.loadRomFromFile(file, function(result) {
-            if (result) {
-                gba.rom = file;
-                gba.runStable();
-                showControls();  // Mostrar controles cuando se carga el ROM
+        function loadRomFromUrl(url) {
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) throw new Error('Error al descargar el ROM');
+                    return response.arrayBuffer();
+                })
+                .then(romData => {
+                    console.log('ROM descargado correctamente:', romData);
+                    run(new Blob([romData], { type: 'application/octet-stream' }));
+                })
+                .catch(error => console.error('Error cargando el ROM desde la URL:', error));
+        }
+
+        function loadSelectedRom() {
+            const selectedRom = document.getElementById('romSelect').value;
+            const romUrl = `https://raw.githubusercontent.com/Pechu0/Pechugon/main/ROMs/${selectedRom}`;
+            console.log("Cargando ROM desde: " + romUrl);
+            loadRomFromUrl(romUrl);
+        }
+
+        function reset() {
+            if (!gba) return;
+            gba.pause();
+            gba.reset();
+
+            const canvas = document.getElementById('screen');
+            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+
+            if (gba.rom instanceof Blob) {
+                gba.loadRomFromFile(gba.rom, result => {
+                    if (result) {
+                        console.log("ROM recargado correctamente, ejecutando...");
+                        gba.runStable();
+                    } else {
+                        console.error("Error al recargar el ROM");
+                    }
+                });
             } else {
-                console.error("Error al cargar el ROM");
+                console.error("No hay un ROM válido para recargar");
             }
-        });
-        gba.rom = file;
-        console.log("ROM guardado en gba.rom:", gba.rom);
-    }
+        }
 
-    // Función para mostrar los controles
-    function showControls() {
-        document.getElementById('preload').classList.add('hidden');
-        document.getElementById('ingame').classList.remove('hidden');
-    }
+        function setVolume(volume) {
+            if (gba?.audio) {
+                gba.audio.masterVolume = volume / 100;
+            }
+        }
 
-    // Función para cargar el ROM desde URL
-    function loadRomFromUrl(url) {
-        fetch(url)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Error al descargar el ROM');
+        window.onload = function() {
+            try {
+                gba = new GameBoyAdvance();
+                gba.keypad.eatInput = true;
+                gba.setLogger((level, error) => {
+                    console.log(error);
+                    gba.pause();
+                    if (document.getElementById('screen').getAttribute('class') === 'dead') {
+                        console.log('We appear to have crashed multiple times without resetting.');
+                        return;
+                    }
+                    const crashImg = document.createElement('img');
+                    crashImg.id = 'crash';
+                    crashImg.src = 'resources/crash.png';
+                    screen.parentElement.insertBefore(crashImg, screen);
+                    screen.setAttribute('class', 'dead');
+                });
+            } catch (exception) {
+                gba = null;
+            }
+
+            if (gba && FileReader) {
+                const canvas = document.getElementById('screen');
+                gba.setCanvas(canvas);
+                gba.logLevel = gba.LOG_ERROR;
+
+                loadRom('resources/bios.bin', bios => {
+                    gba.setBios(bios);
+                });
+
+                if (!gba.audio.context) {
+                    const soundbox = document.getElementById('sound');
+                    if (soundbox) soundbox.remove();
                 }
-                return response.arrayBuffer();
-            })
-            .then(romData => {
-                console.log('ROM descargado correctamente:', romData);
-                var romBlob = new Blob([romData], { type: 'application/octet-stream' });
-                run(romBlob);
-            })
-            .catch(error => console.error('Error cargando el ROM desde la URL:', error));
-    }
 
-    // Manejo de la selección de ROMs
-    function loadSelectedRom() {
-        var select = document.getElementById('romSelect');
-        var selectedRom = select.value;
-        var romUrl = 'https://raw.githubusercontent.com/Pechu0/Pechugon/main/ROMs/' + selectedRom;
-        console.log("Cargando ROM desde: " + romUrl);
-        
-        initAudioContext();
-        loadRomFromUrl(romUrl);
-    }
-
-function reset() {
-    if (!gba) return;
-
-    gba.pause();
-    gba.reset();
-
-    var canvas = document.getElementById('screen');
-    var context = canvas.getContext('2d');
-    context.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Aquí compruebas si gba.rom es válido antes de intentar recargar
-    if (gba.rom && gba.rom instanceof Blob) {
-        console.log("ROM encontrado y válido, intentando recargar...");
-        gba.loadRomFromFile(gba.rom, function(result) {
-            if (result) {
-                console.log("ROM recargado correctamente, ejecutando...");
-                gba.runStable();
-                gba.rom = file;
-                console.log("ROM guardado en gba.rom:", gba.rom);
+                if (window.navigator.appName === 'Microsoft Internet Explorer') {
+                    const pixelatedBox = document.getElementById('pixelated');
+                    if (pixelatedBox) pixelatedBox.remove();
+                }
             } else {
-                console.error("Error al recargar el ROM");
+                const controls = document.getElementById('controls');
+                if (controls) controls.remove();
             }
-        });
-    } else {
-        // Manejo alternativo si no hay un ROM válido
-        console.error("No hay un ROM válido para recargar");
-    }
-}
-
-
-    // Función para ajustar el volumen
-    function setVolume(volume) {
-        if (gba && gba.audio) {
-            gba.audio.masterVolume = volume / 100;  // Normalización del volumen a 0-1
-        }
-    }
-
-    // Fusión de las funciones window.onload en una sola
-    window.onload = function() {
-        try {
-            gba = new GameBoyAdvance();
-            gba.keypad.eatInput = true;
-            gba.setLogger(function(level, error) {
-                console.log(error);
-                gba.pause();
-                var screen = document.getElementById('screen');
-                if (screen.getAttribute('class') == 'dead') {
-                    console.log('We appear to have crashed multiple times without resetting.');
-                    return;
-                }
-                var crash = document.createElement('img');
-                crash.setAttribute('id', 'crash');
-                crash.setAttribute('src', 'resources/crash.png');
-                screen.parentElement.insertBefore(crash, screen);
-                screen.setAttribute('class', 'dead');
-            });
-        } catch (exception) {
-            gba = null;
-        }
-
-        if (gba && FileReader) {
-            var canvas = document.getElementById('screen');
-            gba.setCanvas(canvas);
-
-            gba.logLevel = gba.LOG_ERROR;
-
-            loadRom('resources/bios.bin', function(bios) {
-                gba.setBios(bios);
-            });
-
-            if (!gba.audio.context) {
-                var soundbox = document.getElementById('sound');
-                if (soundbox) {
-                    soundbox.parentElement.removeChild(soundbox);
-                }
-            }
-
-            if (window.navigator.appName === 'Microsoft Internet Explorer') {
-                var pixelatedBox = document.getElementById('pixelated');
-                if (pixelatedBox) {
-                    pixelatedBox.parentElement.removeChild(pixelatedBox);
-                }
-            }
-        } else {
-            var dead = document.getElementById('controls');
-            if (dead) {
-                dead.parentElement.removeChild(dead);
-            }
-        }
-    };
+        };
     </script>
 </head>
 <body>

@@ -79,9 +79,9 @@
         }
 
         function reset() {
-            if (!gba) console.error("No se ha inicializado correctamente el objeto gba.");
+            if (!gba) {console.error("No se ha inicializado correctamente el objeto gba.");
             alert("No se ha inicializado correctamente el emulador.");
-            return;
+            return;}
         
             gba.pause();
             gba.reset();

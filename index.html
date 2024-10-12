@@ -36,28 +36,23 @@
         }
 
         function run(file) {
-            initAudioContext();
+    initAudioContext();
 
-            if (!(file instanceof Blob)) {
-                console.error("El archivo no es un Blob o File");
-                return;
-            }
-            if (gba?.audio?.context?.state === 'suspended') {
-            gba.audio.context.resume().catch(err => console.error('Error al reanudar AudioContext:', err));
-            console.log('AudioContext reanudado');
-            }
-            
-            gba.loadRomFromFile(file, result => {
-                if (result) {
-                    gba.rom = file;
-                    gba.runStable();
-                    showControls();
-                } else {
-                    console.error("Error al cargar el ROM");
-                }
-            });
+    if (!(file instanceof Blob)) {
+        console.error("El archivo no es un Blob o File");
+        return;
+    }
+
+    gba.loadRomFromFile(file, result => {
+        if (result) {
+            gba.rom = file;
+            gba.runStable();
+            showControls();
+        } else {
+            console.error("Error al cargar el ROM");
         }
-
+    });
+    }
         function showControls() {
             document.getElementById('preload').classList.add('hidden');
             document.getElementById('ingame').classList.remove('hidden');
@@ -86,11 +81,13 @@
         function reset() {
             if (!gba) console.error("No se ha inicializado correctamente el objeto gba.");
             alert("No se ha inicializado correctamente el emulador.");
-            return;
+            return;}
+        
             gba.pause();
-            gba.reset();}
+            gba.reset();
             const canvas = document.getElementById('screen');
             canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+        
             loadSelectedRom();
 
             if (gba.rom instanceof Blob) {

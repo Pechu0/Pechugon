@@ -42,7 +42,11 @@
                 console.error("El archivo no es un Blob o File");
                 return;
             }
-
+            if (gba?.audio?.context?.state === 'suspended') {
+            gba.audio.context.resume().catch(err => console.error('Error al reanudar AudioContext:', err));
+            console.log('AudioContext reanudado');
+            }
+            
             gba.loadRomFromFile(file, result => {
                 if (result) {
                     gba.rom = file;
@@ -83,7 +87,11 @@
             if (!gba) return;
             gba.pause();
             gba.reset();
-
+            if (!gba) {
+            console.error("No se ha inicializado correctamente el objeto gba.");
+            alert("No se ha inicializado correctamente el emulador.");
+            return;
+            }
             const canvas = document.getElementById('screen');
             canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
 
@@ -94,10 +102,12 @@
                         gba.runStable();
                     } else {
                         console.error("Error al recargar el ROM");
+                        alert("Ocurrió un error al recargar el ROM.");
                     }
                 });
             } else {
                 console.error("No hay un ROM válido para recargar");
+                alert("No hay un ROM válido para recargar.");
             }
         }
 
@@ -114,6 +124,10 @@
                 gba.setLogger((level, error) => {
                     console.log(error);
                     gba.pause();
+                    if (!gba) {
+                    console.error("No se ha inicializado correctamente el objeto gba.");
+                    return;
+                    }
                     if (document.getElementById('screen').getAttribute('class') === 'dead') {
                         console.log('We appear to have crashed multiple times without resetting.');
                         return;
@@ -124,7 +138,8 @@
                     screen.parentElement.insertBefore(crashImg, screen);
                     screen.setAttribute('class', 'dead');
                 });
-            } catch (exception) {
+            } 
+            catch (exception) {
                 gba = null;
             }
 
@@ -149,6 +164,12 @@
             } else {
                 const controls = document.getElementById('controls');
                 if (controls) controls.remove();
+            }
+            const canvas = document.getElementById('screen');
+            if (canvas && gba) {
+                gba.setCanvas(canvas);
+            } else {
+                console.error("No se encontró el canvas o gba no está inicializado");
             }
         };
     </script>
@@ -180,6 +201,10 @@
                 <input type="range" min="0" max="100" value="50" step="any" onchange="setVolume(this.value)" oninput="setVolume(this.value)">
             </div>
             <p id="openDebug" onclick="enableDebug()">Debugger</p>
+            gba.setLogger((level, error) => {
+            console.log("Error: ", error);
+            gba.pause();
+            });
         </div>
     </section>
     <ul id="links">

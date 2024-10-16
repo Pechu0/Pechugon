@@ -206,11 +206,12 @@
                 <p>Sonido</p>
                 <input type="range" min="0" max="100" value="50" step="any" onchange="setVolume(this.value)" oninput="setVolume(this.value)">
             </div>
+            <div>
             <p id="openDebug" onclick="enableDebug()">Debugger</p>
-            });
             gba.setLogger((level, error) => {
             console.log("Error: ", error);
             gba.pause();
+            </div>
         </div>
     </section>
     <ul id="links">
